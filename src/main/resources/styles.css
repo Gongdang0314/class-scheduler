@@ -1,0 +1,23 @@
+.root {
+    -fx-font-family: "맑은 고딕";
+    -fx-font-size: 12px;
+}
+
+.tab-pane .tab-header-area .tab-header-background {
+    -fx-background-color: #f0f0f0;
+}
+
+.table-view {
+    -fx-background-color: white;
+    -fx-border-color: #ddd;
+}
+
+.button {
+    -fx-background-color: #4CAF50;
+    -fx-text-fill: white;
+    -fx-background-radius: 5px;
+}
+
+.button:hover {
+    -fx-background-color: #45a049;
+}
