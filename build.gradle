@@ -1,27 +1,35 @@
 plugins {
+    id 'java'
     id 'application'
+    id 'org.openjfx.javafxplugin' version '0.1.0'
 }
+
+group = 'ac.cwnu'
+version = '1.0-SNAPSHOT'
 
 repositories {
     mavenCentral()
 }
 
+javafx {
+    version = '21.0.1'
+    modules = ['javafx.controls', 'javafx.fxml']
+}
+
 dependencies {
-    def javafxVersion = '21.0.1'
-    implementation "org.openjfx:javafx-controls:$javafxVersion"
-    implementation "org.openjfx:javafx-fxml:$javafxVersion"
+    // JavaFX 외 추가 의존성 필요시 여기에 작성
+    // 예: implementation 'ch.qos.logback:logback-classic:1.5.18'
 }
 
 application {
-    mainClass = 'MainApplication'
+    mainClass = 'MainApplication' // 패키지 쓰면 'com.example.MainApplication' 식으로
     applicationDefaultJvmArgs = [
-        '--module-path', "${System.getProperty('java.home')}/lib",
-        '--add-modules', 'javafx.controls,javafx.fxml'
+            '--add-modules', 'javafx.controls,javafx.fxml',
+            '--add-opens', 'javafx.graphics/com.sun.javafx.application=ALL-UNNAMED',
+            '--add-opens', 'javafx.fxml/javafx.fxml=ALL-UNNAMED'
     ]
 }
 
 java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
-    }
+    modularity.inferModulePath = true
 }
