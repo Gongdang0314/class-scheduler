@@ -1,4 +1,4 @@
-package main.java.timetable;
+package timetable;
 
 public class SubjectCell {
     
