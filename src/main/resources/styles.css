@@ -1,23 +1,148 @@
+/* Root Layout */
 .root {
-    -fx-font-family: "맑은 고딕";
-    -fx-font-size: 12px;
+    -fx-font-family: "Segoe UI", "Malgun Gothic", sans-serif;
+    -fx-font-size: 14px;
+    -fx-background-color: #F8F9FA;
+    -fx-padding: 20;
 }
 
-.tab-pane .tab-header-area .tab-header-background {
-    -fx-background-color: #f0f0f0;
+/* 공통 박스 스타일 */
+.container {
+    -fx-spacing: 15px;
+    -fx-padding: 15px;
+    -fx-background-radius: 10;
+    -fx-background-color: #FFFFFF;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.08), 6, 0, 0, 2);
 }
 
-.table-view {
-    -fx-background-color: white;
-    -fx-border-color: #ddd;
-}
-
+/* 버튼 기본 스타일 */
 .button {
-    -fx-background-color: #4CAF50;
+    -fx-background-color: #4A90E2;
     -fx-text-fill: white;
-    -fx-background-radius: 5px;
+    -fx-background-radius: 6px;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+    -fx-padding: 6px 14px;
 }
 
 .button:hover {
-    -fx-background-color: #45a049;
+    -fx-background-color: #357ABD;
+}
+
+.button:pressed {
+    -fx-background-color: #2C5E9E;
+}
+
+/* Secondary 버튼 */
+.button-secondary {
+    -fx-background-color: #6C757D;
+    -fx-text-fill: white;
+}
+
+.button-secondary:hover {
+    -fx-background-color: #5A6268;
+}
+
+/* 입력창 (TextField, PasswordField 등) */
+.text-field, .password-field {
+    -fx-border-color: #CED4DA;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+    -fx-padding: 6px;
+    -fx-background-color: white;
+}
+
+.text-field:focused, .password-field:focused {
+    -fx-border-color: #4A90E2;
+    -fx-background-color: #F0F8FF;
+}
+
+/* ComboBox */
+.combo-box {
+    -fx-border-color: #CED4DA;
+    -fx-border-radius: 4;
+    -fx-background-color: white;
+}
+
+/* TableView */
+.table-view {
+    -fx-border-color: #DEE2E6;
+    -fx-border-radius: 5;
+    -fx-background-color: white;
+    -fx-table-cell-border-color: #E9ECEF;
+    -fx-fixed-cell-size: 30px;
+    -fx-selection-bar: #E1ECF9;
+}
+
+.table-view .column-header-background {
+    -fx-background-color: #E9ECEF;
+}
+
+.table-view .table-row-cell:filled:selected {
+    -fx-background-color: #D0E3FF;
+}
+
+/* Chart */
+.chart {
+    -fx-background-color: transparent;
+    -fx-legend-side: bottom;
+}
+
+.chart-title {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #333333;
+}
+
+/* Label 스타일 */
+.label-title {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #212529;
+}
+
+.label-sub {
+    -fx-text-fill: #6C757D;
+}
+
+/* DatePicker */
+.date-picker {
+    -fx-background-radius: 4;
+    -fx-border-color: #CED4DA;
+    -fx-background-color: white;
+}
+
+.date-picker:focused {
+    -fx-border-color: #4A90E2;
+}
+
+/* TabPane */
+.tab-pane {
+    -fx-tab-min-width: 120px;
+    -fx-tab-max-height: 40px;
+}
+
+.tab-pane .tab-header-area {
+    -fx-background-color: #E9ECEF;
+}
+
+/* ScrollPane */
+.scroll-pane {
+    -fx-background: white;
+    -fx-border-color: #DDD;
+    -fx-border-radius: 5;
+}
+
+/* Tooltip */
+.tooltip {
+    -fx-background-color: #333333;
+    -fx-text-fill: white;
+    -fx-padding: 6;
+    -fx-background-radius: 4;
+}
+
+/* Error Label */
+.label-error {
+    -fx-text-fill: #DC3545;
+    -fx-font-size: 12px;
 }
