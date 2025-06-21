@@ -1,7 +1,6 @@
 package timetable;
 
-import model.Subject;
-
+import main.java.common.model.Subject;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,25 +8,23 @@ public class TimetableManager {
     private final List<Subject> subjects = new ArrayList<>();
 
     public boolean addSubject(Subject subject) {
-        if (hasConflict(subject)) {
-            return false; // 시간 겹침
-        }
+        if (hasConflict(subject)) return false;
         subjects.add(subject);
         return true;
     }
 
-    public List<Subject> getSubjects() {
-        return subjects;
-    }
-
     private boolean hasConflict(Subject newSubj) {
         for (Subject subj : subjects) {
-            if (subj.getDay().equals(newSubj.getDay()) &&
-                subj.getStartHour() < newSubj.getEndHour() &&
-                newSubj.getStartHour() < subj.getEndHour()) {
+            if (subj.getDayOfWeek().equals(newSubj.getDayOfWeek()) &&
+                timeOverlap(subj.getStartTime(), subj.getEndTime(),
+                            newSubj.getStartTime(), newSubj.getEndTime())) {
                 return true;
             }
         }
         return false;
+    }
+
+    private boolean timeOverlap(String s1, String e1, String s2, String e2) {
+        return s1.compareTo(e2) < 0 && s2.compareTo(e1) < 0;
     }
 }
