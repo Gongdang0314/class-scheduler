@@ -1,0 +1,21 @@
+plugins {
+    id 'application'
+    id 'java'
+}
+
+group = 'com.unischedule'
+version = '1.0'
+sourceCompatibility = '17'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.openjfx:javafx-controls:21'
+    implementation 'org.openjfx:javafx-fxml:21'
+}
+
+application {
+    mainClass = 'MainApplication'
+}
