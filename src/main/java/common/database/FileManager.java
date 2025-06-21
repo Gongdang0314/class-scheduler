@@ -1,13 +1,21 @@
 // src/main/java/common/database/FileManager.java
-package main.java.common.database;
+package common.database;
 
-import main.java.common.model.*;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
+
+import common.model.Assignment;
+import common.model.Exam;
+import common.model.GradeRecord;
+import common.model.Subject;
 
 public class FileManager {
     private static final String DATA_DIR = "data/";

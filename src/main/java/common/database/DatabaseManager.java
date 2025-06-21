@@ -1,8 +1,8 @@
 // src/main/java/common/database/DatabaseManager.java
-package main.java.common.database;
+package common.database;
 
-import main.java.common.model.*;
-import main.java.common.utils.DateUtils;
+import common.model.*;
+import common.utils.DateUtils;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Optional;

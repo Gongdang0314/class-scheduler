@@ -1,5 +1,5 @@
 // src/main/java/common/model/StudyLog.java
-package main.java.common.model;
+package common.model;
 
 import java.time.LocalDate;
 import java.time.LocalTime;

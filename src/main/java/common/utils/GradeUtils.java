@@ -1,11 +1,12 @@
 // src/main/java/common/utils/GradeUtils.java
-package main.java.common.utils;
+package common.utils;
 
-import main.java.common.model.GradeRecord;
-import main.java.common.model.Subject;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
+
+import common.model.GradeRecord;
+import common.model.Subject;
 
 public class GradeUtils {
     

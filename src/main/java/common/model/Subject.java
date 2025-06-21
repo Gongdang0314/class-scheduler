@@ -1,5 +1,5 @@
 // src/main/java/common/model/Subject.java
-package main.java.common.model;
+package common.model;
 
 public class Subject {
     private int id;
