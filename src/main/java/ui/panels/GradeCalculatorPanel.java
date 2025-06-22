@@ -1,8 +1,27 @@
+// src/main/java/ui/panels/GradeCalculatorPanel.java
 package ui.panels;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.OptionalDouble;
+import java.util.stream.Collectors;
+
+import common.database.DatabaseManager;
+import common.model.Grade;
+import gradecalc.GradeCalculator;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.geometry.Insets;
-import javafx.scene.chart.PieChart;
+import javafx.geometry.Side;
+import javafx.scene.chart.BarChart;
+import javafx.scene.chart.CategoryAxis;
+import javafx.scene.chart.NumberAxis;
+import javafx.scene.chart.XYChart;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
@@ -13,167 +32,337 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import ui.UIStyleManager;
 
-/**
- * 학점계산 탭의 UI 패널
- */
 public class GradeCalculatorPanel extends VBox {
-    
+
     private TableView<GradeItem> gradeTable;
     private TextField subjectField;
     private TextField creditsField;
     private ComboBox<String> gradeComboBox;
+    private TextField pointField;
+    private CheckBox majorCheckBox;
+    private Button addButton;
+    private Button editButton;
+    private Button deleteButton;
+    private Button calculateButton;
+    private Button saveButton;
+    private Button loadButton;
     private Label gpaLabel;
     private Label totalCreditsLabel;
-    private PieChart gradeChart;
-    
+    private Label avgGradeLabel;
+    private Label highestGradeLabel;
+    private CategoryAxis xAxis;
+    private BarChart<String, Number> distributionChart;
+
     public GradeCalculatorPanel() {
-        super(UIStyleManager.STANDARD_SPACING);
-        initializeComponents();
-        setupLayout();
+        initializeFields();
+        initButtons();
+        initTable();
+        initResultLabels();
+        initChart();
+        layoutComponents();
+        hookHandlers();
         applyStyles();
     }
-    
-    private void initializeComponents() {
-        // 입력 폼 컴포넌트
-        subjectField = UIStyleManager.createStandardTextField("과목명");
-        creditsField = UIStyleManager.createStandardTextField("학점 (예: 3)");
-        gradeComboBox = UIStyleManager.createStandardComboBox();
-        gradeComboBox.getItems().addAll("A+", "A", "B+", "B", "C+", "C", "D+", "D", "F");
-        
-        // 결과 표시 라벨
-        gpaLabel = UIStyleManager.createTitleLabel("평점평균: 0.00");
-        totalCreditsLabel = UIStyleManager.createSubLabel("총 학점: 0");
-        
-        // 테이블 설정
-        gradeTable = UIStyleManager.createStandardTableView();
-        setupTableColumns();
-        
-        // 차트 설정
-        gradeChart = new PieChart();
-        gradeChart.getStyleClass().add("chart");
-        gradeChart.setTitle("학점 분포");
+
+    private void initializeFields() {
+        // UIStyleManager.createStandardTextField 사용:contentReference[oaicite:2]{index=2}
+        subjectField  = UIStyleManager.createStandardTextField("과목명 입력");
+        creditsField  = UIStyleManager.createStandardTextField("학점 입력");
+        gradeComboBox = UIStyleManager.createStandardComboBox();           //● 콤보박스 생성:contentReference[oaicite:3]{index=3}
+        gradeComboBox.getItems().addAll("A+","A","B+","B","C+","C","D+","D","F","P","U");
+        gradeComboBox.setOnAction(e -> {
+            String sel = gradeComboBox.getValue();
+            if ("P".equals(sel) || "U".equals(sel)) {
+                pointField.clear();
+            } else {
+                pointField.setText(String.valueOf(mapGradeToPoint(sel)));
+            }
+        });
+        pointField     = UIStyleManager.createStandardTextField("평점");     // 읽기 전용 설정은 아래에서
+        pointField.setEditable(false);
+        majorCheckBox  = new CheckBox("전공");
+        gradeTable     = new TableView<>();
+        gpaLabel       = new Label("평점평균: 0.00");
+        totalCreditsLabel = new Label("총 이수학점: 0");
+        avgGradeLabel     = new Label("평균 성적: -");
+        highestGradeLabel = new Label("최고 성적: -");
     }
-    
-    private void setupTableColumns() {
-        TableColumn<GradeItem, String> subjectCol = new TableColumn<>("과목명");
-        TableColumn<GradeItem, Integer> creditsCol = new TableColumn<>("학점");
-        TableColumn<GradeItem, String> gradeCol = new TableColumn<>("성적");
-        TableColumn<GradeItem, Double> pointCol = new TableColumn<>("평점");
-        
-        subjectCol.setPrefWidth(150);
-        creditsCol.setPrefWidth(60);
-        gradeCol.setPrefWidth(60);
-        pointCol.setPrefWidth(70);
-        
-        gradeTable.getColumns().addAll(subjectCol, creditsCol, gradeCol, pointCol);
-    }
-    
-    private void setupLayout() {
-        // 제목
-        Label titleLabel = UIStyleManager.createTitleLabel("📊 학점 계산기");
-        
-        // 입력 폼과 결과를 좌우로 분할
-        HBox mainContent = new HBox(UIStyleManager.STANDARD_SPACING);
-        
-        // 왼쪽: 입력 폼과 테이블
-        VBox leftPane = new VBox(UIStyleManager.STANDARD_SPACING);
-        leftPane.setPrefWidth(500);
-        
-        // 입력 폼
-        GridPane formGrid = UIStyleManager.createFormGrid();
-        formGrid.add(new Label("과목명:"), 0, 0);
-        formGrid.add(subjectField, 1, 0);
-        formGrid.add(new Label("학점:"), 0, 1);
-        formGrid.add(creditsField, 1, 1);
-        formGrid.add(new Label("성적:"), 0, 2);
-        formGrid.add(gradeComboBox, 1, 2);
-        
-        // 버튼 영역
-        HBox buttonBox = UIStyleManager.createStandardHBox();
-        Button addButton = UIStyleManager.createPrimaryButton("과목 추가");
-        Button editButton = UIStyleManager.createSecondaryButton("수정");
-        Button deleteButton = UIStyleManager.createSecondaryButton("삭제");
-        Button calculateButton = UIStyleManager.createPrimaryButton("학점 계산");
-        
-        UIStyleManager.applyTooltip(addButton, "새 과목을 추가합니다");
+
+    private void initButtons() {
+        addButton       = UIStyleManager.createPrimaryButton("과목 추가");
+        editButton      = UIStyleManager.createSecondaryButton("수정");
+        deleteButton    = UIStyleManager.createSecondaryButton("삭제");
+        calculateButton = UIStyleManager.createPrimaryButton("학점 계산");
         UIStyleManager.applyTooltip(calculateButton, "전체 평점평균을 계산합니다");
-        
-        buttonBox.getChildren().addAll(addButton, editButton, deleteButton, calculateButton);
-        
-        // 테이블
-        VBox tableContainer = UIStyleManager.createStandardContainer();
-        Label tableTitle = UIStyleManager.createSubLabel("수강 과목 목록");
-        gradeTable.setPrefHeight(300);
-        tableContainer.getChildren().addAll(tableTitle, gradeTable);
-        
-        // 입력 폼 컨테이너
-        VBox formContainer = UIStyleManager.createStandardContainer();
-        formContainer.getChildren().addAll(formGrid, buttonBox);
-        
-        leftPane.getChildren().addAll(formContainer, tableContainer);
-        
-        // 오른쪽: 결과 및 차트
-        VBox rightPane = new VBox(UIStyleManager.STANDARD_SPACING);
-        rightPane.setPrefWidth(400);
-        
-        // 결과 표시
-        VBox resultContainer = UIStyleManager.createStandardContainer();
-        Label resultTitle = UIStyleManager.createSubLabel("📈 계산 결과");
-        
-        // 결과 그리드
-        GridPane resultGrid = new GridPane();
-        resultGrid.setHgap(10);
-        resultGrid.setVgap(10);
-        resultGrid.setPadding(new Insets(10));
-        
-        resultGrid.add(gpaLabel, 0, 0, 2, 1);
-        resultGrid.add(totalCreditsLabel, 0, 1, 2, 1);
-        
-        // 추가 통계 정보
-        Label avgGradeLabel = UIStyleManager.createSubLabel("평균 성적: -");
-        Label highestGradeLabel = UIStyleManager.createSubLabel("최고 성적: -");
-        resultGrid.add(avgGradeLabel, 0, 2, 2, 1);
-        resultGrid.add(highestGradeLabel, 0, 3, 2, 1);
-        
-        resultContainer.getChildren().addAll(resultTitle, resultGrid);
-        
-        // 차트 컨테이너
-        VBox chartContainer = UIStyleManager.createStandardContainer();
-        Label chartTitle = UIStyleManager.createSubLabel("📊 성적 분포");
-        gradeChart.setPrefHeight(250);
-        chartContainer.getChildren().addAll(chartTitle, gradeChart);
-        
-        rightPane.getChildren().addAll(resultContainer, chartContainer);
-        
-        // 전체 레이아웃
-        mainContent.getChildren().addAll(leftPane, rightPane);
-        
-        this.getChildren().addAll(titleLabel, mainContent);
+        saveButton      = UIStyleManager.createSecondaryButton("저장");
+        loadButton      = UIStyleManager.createSecondaryButton("불러오기");
     }
-    
+
+    private void initTable() {
+        gradeTable.getColumns().clear();
+        TableColumn<GradeItem, String>  colName   = new TableColumn<>("과목명");
+        TableColumn<GradeItem, Integer> colCredit = new TableColumn<>("학점");
+        TableColumn<GradeItem, String>  colGrade  = new TableColumn<>("성적");
+        TableColumn<GradeItem, Double>  colPoint  = new TableColumn<>("평점");
+        TableColumn<GradeItem, Boolean> colMajor  = new TableColumn<>("전공");
+
+        colName  .setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getSubject()));
+        colCredit.setCellValueFactory(c -> new SimpleIntegerProperty(c.getValue().getCredits()).asObject());
+        colGrade .setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getGrade()));
+        colPoint .setCellValueFactory(c -> new SimpleDoubleProperty(c.getValue().getPoint()).asObject());
+        colMajor .setCellValueFactory(c -> new SimpleBooleanProperty(c.getValue().isMajor()).asObject());
+
+        gradeTable.getColumns().addAll(colName, colCredit, colGrade, colPoint, colMajor);
+        gradeTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+    }
+
+    private void initResultLabels() {
+        gpaLabel          = new Label("평점평균: 0.00");
+        totalCreditsLabel = new Label("총 이수학점: 0");
+        avgGradeLabel     = new Label("평균 성적: -");
+        highestGradeLabel = new Label("최고 성적: -");
+    }
+
+    private void initChart() {
+        xAxis = new CategoryAxis();
+        xAxis.setLabel("과목명");
+        xAxis.setTickLabelsVisible(false);
+        xAxis.setTickMarkVisible(false);
+
+        NumberAxis yAxis = new NumberAxis(0, 5, 1);
+        yAxis.setLabel("평점");
+
+        distributionChart = new BarChart<>(xAxis, yAxis);
+        distributionChart.setTitle("과목별 평점 분포");
+        distributionChart.setLegendSide(Side.BOTTOM);
+        distributionChart.setAnimated(false);
+    }
+
+    private void layoutComponents() {
+        GridPane inputGrid = new GridPane();
+        inputGrid.setHgap(10);
+        inputGrid.setVgap(10);
+        inputGrid.setPadding(new Insets(10));
+        inputGrid.add(new Label("과목명"), 0, 0);
+        inputGrid.add(subjectField, 1, 0);
+        inputGrid.add(new Label("성적"),   2, 0);
+        inputGrid.add(gradeComboBox, 3, 0);
+        inputGrid.add(majorCheckBox, 4, 0);
+        inputGrid.add(new Label("학점"),   0, 1);
+        inputGrid.add(creditsField, 1, 1);
+        inputGrid.add(new Label("평점"),   2, 1);
+        inputGrid.add(pointField,   3, 1);
+
+        HBox buttonBox = new HBox(10,
+            addButton, editButton, deleteButton, calculateButton,
+            saveButton, loadButton
+        );
+        buttonBox.setPadding(new Insets(10));
+
+        VBox leftBox  = new VBox(10, inputGrid, buttonBox, gradeTable);
+        leftBox.setPadding(new Insets(10));
+
+        VBox rightBox = new VBox(10,
+            gpaLabel, totalCreditsLabel, avgGradeLabel, highestGradeLabel, distributionChart
+        );
+        rightBox.setPadding(new Insets(10));
+
+        this.getChildren().setAll(new HBox(20, leftBox, rightBox));
+    }
+
+    private void hookHandlers() {
+        addButton      .setOnAction(e -> addItem());
+        editButton     .setOnAction(e -> editItem());
+        deleteButton   .setOnAction(e -> deleteItem());
+        calculateButton.setOnAction(e -> calculateAndDraw());
+        saveButton     .setOnAction(e -> saveGrades());
+        loadButton     .setOnAction(e -> loadGrades());
+    }
+
+    private void addItem() {
+        try {
+            String subject = subjectField.getText();
+            int credits    = Integer.parseInt(creditsField.getText());
+            String grade   = gradeComboBox.getValue();
+            double point   = ("P".equals(grade) || "U".equals(grade)) 
+                             ? 0.0 
+                             : mapGradeToPoint(grade);
+            boolean major  = majorCheckBox.isSelected();
+
+            gradeTable.getItems().add(new GradeItem(subject, credits, grade, point, major));
+            clearInputs();
+        } catch (NumberFormatException ex) {
+            System.err.println("❌ 학점은 숫자로 입력해야 합니다.");
+        }
+    }
+
+    private void editItem() {
+        String subj = subjectField.getText();
+        for (GradeItem item : gradeTable.getItems()) {
+            if (item.getSubject().equals(subj)) {
+                try {
+                    item.setCredits(Integer.parseInt(creditsField.getText()));
+                    String sel = gradeComboBox.getValue();
+                    item.setGrade(sel);
+                    item.setPoint(("P".equals(sel) || "U".equals(sel))
+                                  ? 0.0
+                                  : mapGradeToPoint(sel));
+                    item.setMajor(majorCheckBox.isSelected());
+                    gradeTable.refresh();
+                } catch (NumberFormatException ex) {
+                    System.err.println("❌ 학점은 숫자로 입력해야 합니다.");
+                }
+                break;
+            }
+        }
+        clearInputs();
+    }
+
+    private void deleteItem() {
+        String subj = subjectField.getText();
+        gradeTable.getItems().removeIf(item -> item.getSubject().equals(subj));
+        clearInputs();
+    }
+
+    private void calculateAndDraw() {
+        List<Grade> grades = gradeTable.getItems().stream()
+            .map(item -> new Grade(
+                item.getSubject(),
+                item.getGrade(),
+                item.getPoint(),
+                item.getCredits(),
+                item.isMajor()
+            ))
+            .collect(Collectors.toList());
+
+        GradeCalculator calc = new GradeCalculator();
+        double gpa = calc.calculateGPA(grades);
+        int total = calc.calculateTotalCredits(grades);
+
+        String avgGrade = grades.stream()
+            .map(Grade::getLetterGrade)
+            .collect(Collectors.groupingBy(g -> g, Collectors.counting()))
+            .entrySet().stream()
+            .max(Comparator.comparingLong(e -> e.getValue()))
+            .map(e -> e.getKey())
+            .orElse("-");
+
+        OptionalDouble maxOpt = grades.stream().mapToDouble(Grade::getGpa).max();
+        String highest = maxOpt.isPresent()
+            ? mapPointToGrade(maxOpt.getAsDouble())
+            : "-";
+
+        gpaLabel         .setText(String.format("평점평균: %.2f", gpa));
+        totalCreditsLabel.setText("총 이수학점: " + total);
+        avgGradeLabel    .setText("평균 성적: " + avgGrade);
+        highestGradeLabel.setText("최고 성적: " + highest);
+
+        distributionChart.getData().clear();
+        List<GradeItem> sorted = new ArrayList<>(gradeTable.getItems());
+        sorted.sort(Comparator.comparingDouble(GradeItem::getPoint));
+        for (GradeItem item : sorted) {
+            XYChart.Series<String, Number> series = new XYChart.Series<>();
+            series.setName(item.getSubject());
+            series.getData().add(new XYChart.Data<>(item.getSubject(), item.getPoint()));
+            distributionChart.getData().add(series);
+        }
+    }
+
+    /** 저장 버튼 핸들러 */
+    private void saveGrades() {
+        List<Grade> grades = gradeTable.getItems().stream()
+            .map(item -> new Grade(
+                item.getSubject(),
+                item.getGrade(),
+                item.getPoint(),
+                item.getCredits(),
+                item.isMajor()
+            ))
+            .collect(Collectors.toList());
+        DatabaseManager.getInstance().saveUserGrades(grades);
+        System.out.println("💾 사용자 성적 저장 완료: " + grades.size() + "개");
+    }
+
+    /** 불러오기 버튼 핸들러 */
+    private void loadGrades() {
+        List<Grade> grades = DatabaseManager.getInstance().getUserGrades();
+        System.out.println("📂 사용자 성적 로드 완료: " + grades.size() + "개");
+        List<GradeItem> items = grades.stream()
+            .map(g -> new GradeItem(
+                g.getSubjectName(),
+                g.getCredit(),
+                g.getLetterGrade(),
+                g.getGpa(),
+                g.isMajor()
+            ))
+            .collect(Collectors.toList());
+        gradeTable.getItems().setAll(items);
+    }
+
+    /** 문자 등급 → 평점 매핑 */
+    private double mapGradeToPoint(String grade) {
+        switch (grade) {
+            case "A+": return 4.5;
+            case "A":  return 4.0;
+            case "B+": return 3.5;
+            case "B":  return 3.0;
+            case "C+": return 2.5;
+            case "C":  return 2.0;
+            case "D+": return 1.5;
+            case "D":  return 1.0;
+            default:   return 0.0;
+        }
+    }
+
+    /** 평점을 문자 등급으로 변환 */
+    private String mapPointToGrade(double point) {
+        if (point >= 4.5) return "A+";
+        if (point >= 4.0) return "A";
+        if (point >= 3.5) return "B+";
+        if (point >= 3.0) return "B";
+        if (point >= 2.5) return "C+";
+        if (point >= 2.0) return "C";
+        if (point >= 1.5) return "D+";
+        if (point >= 1.0) return "D";
+        return "F";
+    }
+
+    private void clearInputs() {
+        subjectField.clear();
+        creditsField.clear();
+        gradeComboBox.setValue(null);
+        pointField.clear();
+        majorCheckBox.setSelected(false);
+    }
+
+    public static class GradeItem {
+        private final SimpleStringProperty  subject;
+        private final SimpleIntegerProperty credits;
+        private final SimpleStringProperty  grade;
+        private final SimpleDoubleProperty  point;
+        private final SimpleBooleanProperty major;
+
+        public GradeItem(String subject, int credits, String grade, double point, boolean major) {
+            this.subject = new SimpleStringProperty(subject);
+            this.credits = new SimpleIntegerProperty(credits);
+            this.grade   = new SimpleStringProperty(grade);
+            this.point   = new SimpleDoubleProperty(point);
+            this.major   = new SimpleBooleanProperty(major);
+        }
+        public String  getSubject() { return subject.get(); }
+        public void    setSubject(String v) { subject.set(v); }
+        public int     getCredits() { return credits.get(); }
+        public void    setCredits(int v) { credits.set(v); }
+        public String  getGrade() { return grade.get(); }
+        public void    setGrade(String v) { grade.set(v); }
+        public double  getPoint() { return point.get(); }
+        public void    setPoint(double v) { point.set(v); }
+        public boolean isMajor() { return major.get(); }
+        public void    setMajor(boolean v) { major.set(v); }
+    }
+
     private void applyStyles() {
         this.setPadding(new Insets(20));
         this.getStyleClass().add("root");
-    }
-    
-    // 더미 데이터 클래스
-    public static class GradeItem {
-        private String subject;
-        private Integer credits;
-        private String grade;
-        private Double point;
-        
-        public GradeItem(String subject, Integer credits, String grade, Double point) {
-            this.subject = subject;
-            this.credits = credits;
-            this.grade = grade;
-            this.point = point;
-        }
-        
-        // getters and setters
-        public String getSubject() { return subject; }
-        public Integer getCredits() { return credits; }
-        public String getGrade() { return grade; }
-        public Double getPoint() { return point; }
     }
 }

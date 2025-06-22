@@ -1,11 +1,16 @@
 // src/main/java/common/database/DatabaseManager.java
 package common.database;
 
-import common.model.*;
-import common.utils.DateUtils;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+
+import common.model.Assignment;
+import common.model.Exam;
+import common.model.Grade;
+import common.model.GradeRecord;
+import common.model.Subject;
+import common.utils.DateUtils;
 
 public class DatabaseManager {
     private static DatabaseManager instance;
@@ -16,11 +21,13 @@ public class DatabaseManager {
     private List<Assignment> assignments;
     private List<Exam> exams;
     private List<GradeRecord> grades;
+    private List<Grade> userGrades;
     
     // 싱글톤 패턴
     private DatabaseManager() {
         fileManager = new FileManager();
         loadAllData();
+        userGrades = fileManager.loadUserGrades();
     }
     
     public static DatabaseManager getInstance() {
@@ -36,6 +43,7 @@ public class DatabaseManager {
         assignments = fileManager.loadAssignments();
         exams = fileManager.loadExams();
         grades = fileManager.loadGrades();
+        // userGrades는 생성자에서 별도 로드
         
         System.out.println("🔄 모든 데이터 로드 완료");
     }
@@ -46,6 +54,7 @@ public class DatabaseManager {
         fileManager.saveAssignments(assignments);
         fileManager.saveExams(exams);
         fileManager.saveGrades(grades);
+        fileManager.saveUserGrades(userGrades);
         
         System.out.println("💾 모든 데이터 저장 완료");
     }
@@ -283,6 +292,19 @@ public class DatabaseManager {
         }
         return removed;
     }
+
+    /** UI에서 저장한 사용자 성적 불러오기 */
+     public List<Grade> getUserGrades() {
+         // 파일에서 최신으로 불러와 캐시에 덮어쓰기
+         userGrades = fileManager.loadUserGrades();
+         return new ArrayList<>(userGrades);
+     }
+ 
+     /** UI에서 전달된 사용자 성적 저장 */
+     public void saveUserGrades(List<Grade> grades) {
+         this.userGrades = new ArrayList<>(grades);
+         fileManager.saveUserGrades(grades);
+     }
     
     // ===== ID 생성 메서드들 =====
     

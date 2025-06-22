@@ -14,16 +14,17 @@ import java.util.List;
 
 import common.model.Assignment;
 import common.model.Exam;
+import common.model.Grade;
 import common.model.GradeRecord;
 import common.model.Subject;
 
 public class FileManager {
     private static final String DATA_DIR = "data/";
-    
+
     public FileManager() {
         createDataDirectory();
     }
-    
+
     // 데이터 디렉토리 생성
     private void createDataDirectory() {
         File dataDir = new File(DATA_DIR);
@@ -34,9 +35,8 @@ public class FileManager {
             }
         }
     }
-    
+
     // === SUBJECT 저장/로드 ===
-    
     public void saveSubjects(List<Subject> subjects) {
         try (PrintWriter writer = new PrintWriter(new FileWriter(DATA_DIR + "subjects.txt"))) {
             for (Subject subject : subjects) {
@@ -47,16 +47,14 @@ public class FileManager {
             System.err.println("❌ 과목 저장 실패: " + e.getMessage());
         }
     }
-    
+
     public List<Subject> loadSubjects() {
         List<Subject> subjects = new ArrayList<>();
         try (BufferedReader reader = new BufferedReader(new FileReader(DATA_DIR + "subjects.txt"))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 Subject subject = stringToSubject(line);
-                if (subject != null) {
-                    subjects.add(subject);
-                }
+                if (subject != null) subjects.add(subject);
             }
             System.out.println("📂 과목 데이터 로드 완료: " + subjects.size() + "개");
         } catch (IOException e) {
@@ -64,8 +62,7 @@ public class FileManager {
         }
         return subjects;
     }
-    
-    // Subject를 문자열로 변환
+
     private String subjectToString(Subject subject) {
         return subject.getId() + "|" +
                nullToEmpty(subject.getName()) + "|" +
@@ -77,8 +74,7 @@ public class FileManager {
                nullToEmpty(subject.getStartTime()) + "|" +
                nullToEmpty(subject.getEndTime());
     }
-    
-    // 문자열을 Subject로 변환
+
     private Subject stringToSubject(String line) {
         try {
             String[] parts = line.split("\\|");
@@ -100,29 +96,26 @@ public class FileManager {
         }
         return null;
     }
-    
+
     // === ASSIGNMENT 저장/로드 ===
-    
     public void saveAssignments(List<Assignment> assignments) {
         try (PrintWriter writer = new PrintWriter(new FileWriter(DATA_DIR + "assignments.txt"))) {
-            for (Assignment assignment : assignments) {
-                writer.println(assignmentToString(assignment));
+            for (Assignment asg : assignments) {
+                writer.println(assignmentToString(asg));
             }
             System.out.println("💾 과제 데이터 저장 완료: " + assignments.size() + "개");
         } catch (IOException e) {
             System.err.println("❌ 과제 저장 실패: " + e.getMessage());
         }
     }
-    
+
     public List<Assignment> loadAssignments() {
         List<Assignment> assignments = new ArrayList<>();
         try (BufferedReader reader = new BufferedReader(new FileReader(DATA_DIR + "assignments.txt"))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                Assignment assignment = stringToAssignment(line);
-                if (assignment != null) {
-                    assignments.add(assignment);
-                }
+                Assignment asg = stringToAssignment(line);
+                if (asg != null) assignments.add(asg);
             }
             System.out.println("📂 과제 데이터 로드 완료: " + assignments.size() + "개");
         } catch (IOException e) {
@@ -130,63 +123,56 @@ public class FileManager {
         }
         return assignments;
     }
-    
-    // Assignment를 문자열로 변환
-    private String assignmentToString(Assignment assignment) {
-        return assignment.getId() + "|" +
-               assignment.getSubjectId() + "|" +
-               nullToEmpty(assignment.getTitle()) + "|" +
-               nullToEmpty(assignment.getDescription()) + "|" +
-               (assignment.getDueDate() != null ? assignment.getDueDate().toString() : "") + "|" +
-               nullToEmpty(assignment.getStatus()) + "|" +
-               nullToEmpty(assignment.getPriority());
+
+    private String assignmentToString(Assignment a) {
+        return a.getId() + "|" +
+               a.getSubjectId() + "|" +
+               nullToEmpty(a.getTitle()) + "|" +
+               nullToEmpty(a.getDescription()) + "|" +
+               (a.getDueDate() != null ? a.getDueDate().toString() : "") + "|" +
+               nullToEmpty(a.getStatus()) + "|" +
+               nullToEmpty(a.getPriority());
     }
-    
-    // 문자열을 Assignment로 변환
+
     private Assignment stringToAssignment(String line) {
         try {
             String[] parts = line.split("\\|");
             if (parts.length >= 7) {
-                Assignment assignment = new Assignment();
-                assignment.setId(Integer.parseInt(parts[0]));
-                assignment.setSubjectId(Integer.parseInt(parts[1]));
-                assignment.setTitle(emptyToNull(parts[2]));
-                assignment.setDescription(emptyToNull(parts[3]));
-                if (!parts[4].isEmpty()) {
-                    assignment.setDueDate(LocalDate.parse(parts[4]));
-                }
-                assignment.setStatus(emptyToNull(parts[5]));
-                assignment.setPriority(emptyToNull(parts[6]));
-                return assignment;
+                Assignment asg = new Assignment();
+                asg.setId(Integer.parseInt(parts[0]));
+                asg.setSubjectId(Integer.parseInt(parts[1]));
+                asg.setTitle(emptyToNull(parts[2]));
+                asg.setDescription(emptyToNull(parts[3]));
+                if (!parts[4].isEmpty()) asg.setDueDate(LocalDate.parse(parts[4]));
+                asg.setStatus(emptyToNull(parts[5]));
+                asg.setPriority(emptyToNull(parts[6]));
+                return asg;
             }
         } catch (Exception e) {
             System.err.println("⚠️ 과제 데이터 파싱 오류: " + line);
         }
         return null;
     }
-    
+
     // === EXAM 저장/로드 ===
-    
     public void saveExams(List<Exam> exams) {
         try (PrintWriter writer = new PrintWriter(new FileWriter(DATA_DIR + "exams.txt"))) {
-            for (Exam exam : exams) {
-                writer.println(examToString(exam));
+            for (Exam ex : exams) {
+                writer.println(examToString(ex));
             }
             System.out.println("💾 시험 데이터 저장 완료: " + exams.size() + "개");
         } catch (IOException e) {
             System.err.println("❌ 시험 저장 실패: " + e.getMessage());
         }
     }
-    
+
     public List<Exam> loadExams() {
         List<Exam> exams = new ArrayList<>();
         try (BufferedReader reader = new BufferedReader(new FileReader(DATA_DIR + "exams.txt"))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                Exam exam = stringToExam(line);
-                if (exam != null) {
-                    exams.add(exam);
-                }
+                Exam ex = stringToExam(line);
+                if (ex != null) exams.add(ex);
             }
             System.out.println("📂 시험 데이터 로드 완료: " + exams.size() + "개");
         } catch (IOException e) {
@@ -194,63 +180,56 @@ public class FileManager {
         }
         return exams;
     }
-    
-    // Exam을 문자열로 변환
-    private String examToString(Exam exam) {
-        return exam.getId() + "|" +
-               exam.getSubjectId() + "|" +
-               nullToEmpty(exam.getTitle()) + "|" +
-               nullToEmpty(exam.getType()) + "|" +
-               (exam.getExamDateTime() != null ? exam.getExamDateTime().toString() : "") + "|" +
-               nullToEmpty(exam.getLocation()) + "|" +
-               nullToEmpty(exam.getDescription());
+
+    private String examToString(Exam e) {
+        return e.getId() + "|" +
+               e.getSubjectId() + "|" +
+               nullToEmpty(e.getTitle()) + "|" +
+               nullToEmpty(e.getType()) + "|" +
+               (e.getExamDateTime() != null ? e.getExamDateTime().toString() : "") + "|" +
+               nullToEmpty(e.getLocation()) + "|" +
+               nullToEmpty(e.getDescription());
     }
-    
-    // 문자열을 Exam으로 변환
+
     private Exam stringToExam(String line) {
         try {
             String[] parts = line.split("\\|");
             if (parts.length >= 7) {
-                Exam exam = new Exam();
-                exam.setId(Integer.parseInt(parts[0]));
-                exam.setSubjectId(Integer.parseInt(parts[1]));
-                exam.setTitle(emptyToNull(parts[2]));
-                exam.setType(emptyToNull(parts[3]));
-                if (!parts[4].isEmpty()) {
-                    exam.setExamDateTime(LocalDateTime.parse(parts[4]));
-                }
-                exam.setLocation(emptyToNull(parts[5]));
-                exam.setDescription(emptyToNull(parts[6]));
-                return exam;
+                Exam ex = new Exam();
+                ex.setId(Integer.parseInt(parts[0]));
+                ex.setSubjectId(Integer.parseInt(parts[1]));
+                ex.setTitle(emptyToNull(parts[2]));
+                ex.setType(emptyToNull(parts[3]));
+                if (!parts[4].isEmpty()) ex.setExamDateTime(LocalDateTime.parse(parts[4]));
+                ex.setLocation(emptyToNull(parts[5]));
+                ex.setDescription(emptyToNull(parts[6]));
+                return ex;
             }
         } catch (Exception e) {
             System.err.println("⚠️ 시험 데이터 파싱 오류: " + line);
         }
         return null;
     }
-    
-    // === GRADE 저장/로드 ===
-    
+
+    // === GradeRecord 저장/로드 ===
     public void saveGrades(List<GradeRecord> grades) {
         try (PrintWriter writer = new PrintWriter(new FileWriter(DATA_DIR + "grades.txt"))) {
-            for (GradeRecord grade : grades) {
-                writer.println(gradeToString(grade));
+            for (GradeRecord gr : grades) {
+                writer.println(gradeToString(gr));
             }
             System.out.println("💾 성적 데이터 저장 완료: " + grades.size() + "개");
         } catch (IOException e) {
             System.err.println("❌ 성적 저장 실패: " + e.getMessage());
         }
     }
-    
+
     public List<GradeRecord> loadGrades() {
         List<GradeRecord> grades = new ArrayList<>();
         try (BufferedReader reader = new BufferedReader(new FileReader(DATA_DIR + "grades.txt"))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                GradeRecord grade = stringToGrade(line);
-                if (grade != null) {
-                    grades.add(grade);
-                }
+                GradeRecord gr = stringToGrade(line);
+                if (gr != null) grades.add(gr);
             }
             System.out.println("📂 성적 데이터 로드 완료: " + grades.size() + "개");
         } catch (IOException e) {
@@ -258,8 +237,7 @@ public class FileManager {
         }
         return grades;
     }
-    
-    // GradeRecord를 문자열로 변환
+
     private String gradeToString(GradeRecord grade) {
         return grade.getId() + "|" +
                grade.getSubjectId() + "|" +
@@ -268,70 +246,109 @@ public class FileManager {
                nullToEmpty(grade.getLetterGrade()) + "|" +
                grade.getGradePoint();
     }
-    
-    // 문자열을 GradeRecord로 변환
+
     private GradeRecord stringToGrade(String line) {
         try {
             String[] parts = line.split("\\|");
             if (parts.length >= 6) {
-                GradeRecord grade = new GradeRecord();
-                grade.setId(Integer.parseInt(parts[0]));
-                grade.setSubjectId(Integer.parseInt(parts[1]));
-                grade.setSemester(emptyToNull(parts[2]));
-                grade.setScore(Double.parseDouble(parts[3]));
-                grade.setLetterGrade(emptyToNull(parts[4]));
-                grade.setGradePoint(Double.parseDouble(parts[5]));
-                return grade;
+                GradeRecord gr = new GradeRecord();
+                gr.setId(Integer.parseInt(parts[0]));
+                gr.setSubjectId(Integer.parseInt(parts[1]));
+                gr.setSemester(emptyToNull(parts[2]));
+                gr.setScore(Double.parseDouble(parts[3]));
+                gr.setLetterGrade(emptyToNull(parts[4]));
+                gr.setGradePoint(Double.parseDouble(parts[5]));
+                return gr;
             }
         } catch (Exception e) {
             System.err.println("⚠️ 성적 데이터 파싱 오류: " + line);
         }
         return null;
     }
-    
+
+    // === 사용자 Grade 저장/로드 (UI용 Grade 기반) ===
+    private String userGradeToString(Grade grade) {
+        return grade.getSubjectName() + "|" +
+               grade.getLetterGrade()  + "|" +
+               grade.getGpa()          + "|" +
+               grade.getCredit()       + "|" +
+               grade.isMajor();
+    }
+
+    private Grade stringToUserGrade(String line) {
+        try {
+            String[] parts = line.split("\\|");
+            if (parts.length >= 5) {
+                String subj   = parts[0];
+                String let    = parts[1];
+                double gpa    = Double.parseDouble(parts[2]);
+                int credit    = Integer.parseInt(parts[3]);
+                boolean major = Boolean.parseBoolean(parts[4]);
+                return new Grade(subj, let, gpa, credit, major);
+            }
+        } catch (Exception e) {
+            System.err.println("⚠️ 사용자 성적 파싱 오류: " + line);
+        }
+        return null;
+    }
+
+    public void saveUserGrades(List<Grade> grades) {
+        try (PrintWriter writer = new PrintWriter(new FileWriter(DATA_DIR + "user_grades.txt"))) {
+            for (Grade g : grades) {
+                writer.println(userGradeToString(g));
+            }
+            System.out.println("💾 사용자 성적 저장 완료: " + grades.size() + "개");
+        } catch (IOException e) {
+            System.err.println("❌ 사용자 성적 저장 실패: " + e.getMessage());
+        }
+    }
+
+    public List<Grade> loadUserGrades() {
+        List<Grade> grades = new ArrayList<>();
+        try (BufferedReader reader = new BufferedReader(new FileReader(DATA_DIR + "user_grades.txt"))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                Grade g = stringToUserGrade(line);
+                if (g != null) grades.add(g);
+            }
+            System.out.println("📂 사용자 성적 로드 완료: " + grades.size() + "개");
+        } catch (IOException e) {
+            System.out.println("📄 사용자 성적 파일이 없음 - 빈 리스트 반환");
+        }
+        return grades;
+    }
+
     // === 유틸리티 메서드 ===
-    
-    // null을 빈 문자열로 변환
     private String nullToEmpty(String str) {
         return str == null ? "" : str;
     }
-    
-    // 빈 문자열을 null로 변환
+
     private String emptyToNull(String str) {
         return str.isEmpty() ? null : str;
     }
-    
-    // 파일 존재 여부 확인
+
     public boolean fileExists(String fileName) {
-        File file = new File(DATA_DIR + fileName);
-        return file.exists();
+        return new File(DATA_DIR + fileName).exists();
     }
-    
-    // 파일 삭제
+
     public boolean deleteFile(String fileName) {
-        File file = new File(DATA_DIR + fileName);
-        return file.delete();
+        return new File(DATA_DIR + fileName).delete();
     }
-    
-    // 백업 생성
+
     public void createBackup(String fileName) {
         try {
-            File originalFile = new File(DATA_DIR + fileName);
-            if (originalFile.exists()) {
-                String backupFileName = "backup_" + System.currentTimeMillis() + "_" + fileName;
-                File backupFile = new File(DATA_DIR + backupFileName);
-                
-                try (BufferedReader reader = new BufferedReader(new FileReader(originalFile));
-                     PrintWriter writer = new PrintWriter(new FileWriter(backupFile))) {
+            File orig = new File(DATA_DIR + fileName);
+            if (orig.exists()) {
+                String backup = "backup_" + System.currentTimeMillis() + "_" + fileName;
+                try (BufferedReader r = new BufferedReader(new FileReader(orig));
+                     PrintWriter w = new PrintWriter(new FileWriter(DATA_DIR + backup))) {
                     String line;
-                    while ((line = reader.readLine()) != null) {
-                        writer.println(line);
-                    }
+                    while ((line = r.readLine()) != null) w.println(line);
                 }
-                System.out.println("🔄 백업 생성 완료: " + backupFileName);
+                System.out.println("🔄 백업 생성: " + backup);
             }
         } catch (IOException e) {
-            System.err.println("❌ 백업 생성 실패: " + e.getMessage());
+            System.err.println("❌ 백업 실패: " + e.getMessage());
         }
     }
 }
