@@ -1,5 +1,5 @@
 // src/main/java/common/utils/DateUtils.java
-package main.java.common.utils;
+package common.utils;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

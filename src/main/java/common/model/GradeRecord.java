@@ -1,5 +1,5 @@
 // src/main/java/common/model/GradeRecord.java
-package main.java.common.model;
+package common.model;
 
 public class GradeRecord {
     private int id;

@@ -1,5 +1,5 @@
 // src/main/java/common/model/Exam.java
-package main.java.common.model;
+package common.model;
 
 import java.time.LocalDateTime;
 
