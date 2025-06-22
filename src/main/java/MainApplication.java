@@ -24,18 +24,13 @@ public class MainApplication extends Application {
         gradeCalculatorTab.setClosable(false);
         
         Tab timetableTab = new Tab("📅 시간표");
-        timetableTab.setContent(new TimetablePanel()); // ✅ timetable 패널
+        timetableTab.setContent(new timetable.TimetableMainPanel());
         timetableTab.setClosable(false);
         
-        Tab assignmentExamTab = new Tab("📝 과제/시험");
-        assignmentExamTab.setContent(new AssignmentExamPanel());
-        assignmentExamTab.setClosable(false);
-        
         tabPane.getTabs().addAll(
-            studyPlanTab,
-            gradeCalculatorTab,
             timetableTab,
-            assignmentExamTab
+            studyPlanTab,
+            gradeCalculatorTab
         );
         
         Scene scene = new Scene(tabPane, 1200, 800);

@@ -254,8 +254,7 @@ public class AssignmentExamManager {
                 exam.setType(typeCombo.getValue());
                 
                 // 시험 날짜와 시간 결합
-                LocalDateTime examDateTime = LocalDateTime.of(
-                    examDatePicker.getValue(),
+                LocalDateTime examDateTime = examDatePicker.getValue().atTime(
                     Integer.parseInt(examHourCombo.getValue()),
                     Integer.parseInt(examMinuteCombo.getValue())
                 );
