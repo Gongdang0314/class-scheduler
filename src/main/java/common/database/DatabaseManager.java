@@ -3,7 +3,9 @@ package common.database;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;    // MODIFIED: 중복 제거를 위한 Collectors import
 
 import common.model.Assignment;
 import common.model.Exam;
@@ -39,10 +41,10 @@ public class DatabaseManager {
     
     // 모든 데이터 로드
     private void loadAllData() {
-        subjects = fileManager.loadSubjects();
+        subjects    = fileManager.loadSubjects();
         assignments = fileManager.loadAssignments();
-        exams = fileManager.loadExams();
-        grades = fileManager.loadGrades();
+        exams       = fileManager.loadExams();
+        grades      = fileManager.loadGrades();
         // userGrades는 생성자에서 별도 로드
         
         System.out.println("🔄 모든 데이터 로드 완료");
@@ -61,8 +63,19 @@ public class DatabaseManager {
     
     // ===== SUBJECT 관련 메서드 =====
     
+    /**
+     * 모든 과목을 가져옵니다.
+     * 같은 이름(name)이 중복된 과목이 있으면 하나만 남기고 제거합니다.
+     */
     public List<Subject> getAllSubjects() {
-        return new ArrayList<>(subjects);
+        // name → Subject 맵으로 수집하면서 첫 번째 등장만 유지
+        Map<String, Subject> unique = subjects.stream()
+            .collect(Collectors.toMap(
+                Subject::getName,
+                s -> s,
+                (existing, replacement) -> existing
+            ));
+        return new ArrayList<>(unique.values());
     }
     
     public Optional<Subject> getSubjectById(int id) {
@@ -71,10 +84,13 @@ public class DatabaseManager {
                 .findFirst();
     }
     
+    /**
+     * 요일별 과목 조회도 중복 제거된 리스트에서 수행합니다.
+     */
     public List<Subject> getSubjectsByDay(String dayOfWeek) {
-        return subjects.stream()
+        return getAllSubjects().stream()
                 .filter(subject -> dayOfWeek.equals(subject.getDayOfWeek()))
-                .toList();
+                .collect(Collectors.toList());
     }
     
     public void addSubject(Subject subject) {
@@ -122,19 +138,19 @@ public class DatabaseManager {
     public List<Assignment> getAssignmentsBySubject(int subjectId) {
         return assignments.stream()
                 .filter(assignment -> assignment.getSubjectId() == subjectId)
-                .toList();
+                .collect(Collectors.toList());
     }
     
     public List<Assignment> getAssignmentsByStatus(String status) {
         return assignments.stream()
                 .filter(assignment -> status.equals(assignment.getStatus()))
-                .toList();
+                .collect(Collectors.toList());
     }
     
     public List<Assignment> getUrgentAssignments() {
         return assignments.stream()
                 .filter(Assignment::isUrgent)
-                .toList();
+                .collect(Collectors.toList());
     }
     
     public Optional<Assignment> getAssignmentById(int id) {
@@ -183,19 +199,19 @@ public class DatabaseManager {
     public List<Exam> getExamsBySubject(int subjectId) {
         return exams.stream()
                 .filter(exam -> exam.getSubjectId() == subjectId)
-                .toList();
+                .collect(Collectors.toList());
     }
     
     public List<Exam> getExamsByType(String type) {
         return exams.stream()
                 .filter(exam -> type.equals(exam.getType()))
-                .toList();
+                .collect(Collectors.toList());
     }
     
     public List<Exam> getImminentExams() {
         return exams.stream()
                 .filter(Exam::isImminent)
-                .toList();
+                .collect(Collectors.toList());
     }
     
     public Optional<Exam> getExamById(int id) {
@@ -234,44 +250,44 @@ public class DatabaseManager {
         }
         return removed;
     }
-    
-    // ===== GRADE 관련 메서드 =====
-    
+
+    // ===== GRADE RECORD 관련 메서드 =====
+
     public List<GradeRecord> getAllGrades() {
         return new ArrayList<>(grades);
     }
-    
+
     public List<GradeRecord> getGradesBySemester(String semester) {
         return grades.stream()
                 .filter(grade -> semester.equals(grade.getSemester()))
-                .toList();
+                .collect(Collectors.toList());
     }
-    
+
     public List<GradeRecord> getCurrentSemesterGrades() {
         String currentSemester = DateUtils.getCurrentSemester();
         return getGradesBySemester(currentSemester);
     }
-    
+
     public Optional<GradeRecord> getGradeById(int id) {
         return grades.stream()
                 .filter(grade -> grade.getId() == id)
                 .findFirst();
     }
-    
+
     public Optional<GradeRecord> getGradeBySubjectAndSemester(int subjectId, String semester) {
         return grades.stream()
-                .filter(grade -> grade.getSubjectId() == subjectId && 
+                .filter(grade -> grade.getSubjectId() == subjectId &&
                                semester.equals(grade.getSemester()))
                 .findFirst();
     }
-    
+
     public void addGrade(GradeRecord grade) {
         grade.setId(generateNewGradeId());
         grades.add(grade);
         fileManager.saveGrades(grades);
         System.out.println("➕ 성적 추가: " + grade.getLetterGrade());
     }
-    
+
     public boolean updateGrade(GradeRecord updatedGrade) {
         for (int i = 0; i < grades.size(); i++) {
             if (grades.get(i).getId() == updatedGrade.getId()) {
@@ -283,7 +299,7 @@ public class DatabaseManager {
         }
         return false;
     }
-    
+
     public boolean deleteGrade(int id) {
         boolean removed = grades.removeIf(grade -> grade.getId() == id);
         if (removed) {
@@ -294,17 +310,17 @@ public class DatabaseManager {
     }
 
     /** UI에서 저장한 사용자 성적 불러오기 */
-     public List<Grade> getUserGrades() {
-         // 파일에서 최신으로 불러와 캐시에 덮어쓰기
-         userGrades = fileManager.loadUserGrades();
-         return new ArrayList<>(userGrades);
-     }
- 
-     /** UI에서 전달된 사용자 성적 저장 */
-     public void saveUserGrades(List<Grade> grades) {
-         this.userGrades = new ArrayList<>(grades);
-         fileManager.saveUserGrades(grades);
-     }
+    public List<Grade> getUserGrades() {
+        // 파일에서 최신으로 불러와 캐시에 덮어쓰기
+        userGrades = fileManager.loadUserGrades();
+        return new ArrayList<>(userGrades);
+    }
+
+    /** UI에서 전달된 사용자 성적 저장 */
+    public void saveUserGrades(List<Grade> grades) {
+        this.userGrades = new ArrayList<>(grades);
+        fileManager.saveUserGrades(grades);
+    }
     
     // ===== ID 생성 메서드들 =====
     
@@ -337,8 +353,8 @@ public class DatabaseManager {
     }
     
     // ===== 통계 및 유틸리티 메서드 =====
-    
-    // 데이터베이스 상태 정보
+
+    /** 데이터베이스 상태 정보 */
     public String getDatabaseStatus() {
         return String.format(
             "📊 데이터베이스 현황\n" +
@@ -354,19 +370,8 @@ public class DatabaseManager {
             grades.size()
         );
     }
-    
-    // 과목별 과제/시험 개수 통계
-    public void printSubjectStatistics() {
-        System.out.println("\n📈 과목별 통계:");
-        for (Subject subject : subjects) {
-            int assignmentCount = getAssignmentsBySubject(subject.getId()).size();
-            int examCount = getExamsBySubject(subject.getId()).size();
-            System.out.printf("  %s: 과제 %d개, 시험 %d개\n", 
-                            subject.getName(), assignmentCount, examCount);
-        }
-    }
-    
-    // 백업 생성
+
+    /** 백업 생성 */
     public void createBackup() {
         fileManager.createBackup("subjects.txt");
         fileManager.createBackup("assignments.txt");
@@ -374,8 +379,8 @@ public class DatabaseManager {
         fileManager.createBackup("grades.txt");
         System.out.println("🔄 전체 백업 완료");
     }
-    
-    // 데이터 초기화 (개발/테스트용)
+
+    /** 데이터 초기화 (개발/테스트용) */
     public void clearAllData() {
         subjects.clear();
         assignments.clear();
@@ -384,8 +389,8 @@ public class DatabaseManager {
         saveAllData();
         System.out.println("🧹 모든 데이터 초기화 완료");
     }
-    
-    // 데이터 다시 로드
+
+    /** 데이터 다시 로드 */
     public void reloadData() {
         loadAllData();
         System.out.println("🔄 데이터 다시 로드 완료");

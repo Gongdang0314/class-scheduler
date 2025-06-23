@@ -6,7 +6,7 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 import ui.panels.StudyPlanPanel;
 
-public class StudyPlan extends Application {
+public class StudyTracker extends Application {
 
     @Override
     public void start(Stage primaryStage) {
