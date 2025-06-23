@@ -54,7 +54,10 @@ public class AssignmentExamManager {
         titleField.setPromptText("과제 제목");
         
         ComboBox<Subject> subjectCombo = new ComboBox<>();
-        subjectCombo.getItems().addAll(dbManager.getAllSubjects());
+        List<Subject> allSubjects = dbManager.getAllSubjects();
+        subjectCombo.getItems().addAll(allSubjects);
+        
+        // StringConverter 수정 - fromString 메서드 제대로 구현
         subjectCombo.setConverter(new javafx.util.StringConverter<Subject>() {
             @Override
             public String toString(Subject subject) {
@@ -63,7 +66,14 @@ public class AssignmentExamManager {
             
             @Override
             public Subject fromString(String string) {
-                return null;
+                // 문자열로부터 Subject 객체를 찾아서 반환
+                if (string == null || string.trim().isEmpty()) {
+                    return null;
+                }
+                return allSubjects.stream()
+                    .filter(s -> s.getName().equals(string.trim()))
+                    .findFirst()
+                    .orElse(null);
             }
         });
         
@@ -166,7 +176,10 @@ public class AssignmentExamManager {
         titleField.setPromptText("시험명");
         
         ComboBox<Subject> subjectCombo = new ComboBox<>();
-        subjectCombo.getItems().addAll(dbManager.getAllSubjects());
+        List<Subject> allSubjects = dbManager.getAllSubjects();
+        subjectCombo.getItems().addAll(allSubjects);
+        
+        // StringConverter 수정 - fromString 메서드 제대로 구현
         subjectCombo.setConverter(new javafx.util.StringConverter<Subject>() {
             @Override
             public String toString(Subject subject) {
@@ -175,7 +188,14 @@ public class AssignmentExamManager {
             
             @Override
             public Subject fromString(String string) {
-                return null;
+                // 문자열로부터 Subject 객체를 찾아서 반환
+                if (string == null || string.trim().isEmpty()) {
+                    return null;
+                }
+                return allSubjects.stream()
+                    .filter(s -> s.getName().equals(string.trim()))
+                    .findFirst()
+                    .orElse(null);
             }
         });
         
