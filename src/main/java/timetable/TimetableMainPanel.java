@@ -5,10 +5,6 @@ import javafx.scene.layout.VBox;
 /**
  * 메인 애플리케이션에서 사용할 시간표 패널
  * 기존 ui.panels.TimetablePanel 대신 사용할 수 있습니다.
- * 
- * MainApplication.java에서 다음과 같이 사용:
- * Tab timetableTab = new Tab("📅 시간표");
- * timetableTab.setContent(new timetable.TimetableMainPanel());
  */
 public class TimetableMainPanel extends VBox {
     
