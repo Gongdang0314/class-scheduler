@@ -161,7 +161,7 @@ public class StudyPlanPanel extends VBox {
 
             int target = parseIntOrZero(sel.getHours());
             int total = Math.min(studied, target);
-            sel.setStatus(total + "/" + target);
+            sel.setStatus(total + "h / " + target + "h");
 
             planTable.refresh();
             savePlans();
