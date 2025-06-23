@@ -1,12 +1,13 @@
-// src/main/java/common/database/DatabaseManager.java
 package common.database;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;    // MODIFIED: 중복 제거를 위한 Collectors import
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.stream.Collectors;
 
+import common.listeners.DataChangeListener;
 import common.model.Assignment;
 import common.model.Exam;
 import common.model.Grade;
@@ -17,6 +18,9 @@ import common.utils.DateUtils;
 public class DatabaseManager {
     private static DatabaseManager instance;
     private FileManager fileManager;
+    
+    // Observer 패턴을 위한 리스너 목록 (thread-safe)
+    private final List<DataChangeListener> listeners = new CopyOnWriteArrayList<>();
     
     // 메모리 캐시 (빠른 접근을 위해)
     private List<Subject> subjects;
@@ -39,13 +43,84 @@ public class DatabaseManager {
         return instance;
     }
     
+    /**
+     * 데이터 변경 리스너 등록
+     */
+    public void addDataChangeListener(DataChangeListener listener) {
+        if (listener != null && !listeners.contains(listener)) {
+            listeners.add(listener);
+            System.out.println("🔗 데이터 변경 리스너 등록: " + listener.getClass().getSimpleName());
+        }
+    }
+    
+    /**
+     * 데이터 변경 리스너 제거
+     */
+    public void removeDataChangeListener(DataChangeListener listener) {
+        if (listener != null) {
+            listeners.remove(listener);
+            System.out.println("🔗 데이터 변경 리스너 제거: " + listener.getClass().getSimpleName());
+        }
+    }
+    
+    /**
+     * 과목 변경 알림
+     */
+    private void notifySubjectChanged(String changeType, int subjectId) {
+        for (DataChangeListener listener : listeners) {
+            try {
+                listener.onSubjectChanged(changeType, subjectId);
+            } catch (Exception e) {
+                System.err.println("❌ 리스너 알림 중 오류: " + e.getMessage());
+            }
+        }
+    }
+    
+    /**
+     * 과제 변경 알림
+     */
+    private void notifyAssignmentChanged(String changeType, int assignmentId) {
+        for (DataChangeListener listener : listeners) {
+            try {
+                listener.onAssignmentChanged(changeType, assignmentId);
+            } catch (Exception e) {
+                System.err.println("❌ 리스너 알림 중 오류: " + e.getMessage());
+            }
+        }
+    }
+    
+    /**
+     * 시험 변경 알림
+     */
+    private void notifyExamChanged(String changeType, int examId) {
+        for (DataChangeListener listener : listeners) {
+            try {
+                listener.onExamChanged(changeType, examId);
+            } catch (Exception e) {
+                System.err.println("❌ 리스너 알림 중 오류: " + e.getMessage());
+            }
+        }
+    }
+    
+    /**
+     * 성적 변경 알림
+     */
+    private void notifyGradeChanged(String changeType, int gradeId) {
+        for (DataChangeListener listener : listeners) {
+            try {
+                listener.onGradeChanged(changeType, gradeId);
+            } catch (Exception e) {
+                System.err.println("❌ 리스너 알림 중 오류: " + e.getMessage());
+            }
+        }
+    }
+    
     // 모든 데이터 로드
     private void loadAllData() {
         subjects    = fileManager.loadSubjects();
         assignments = fileManager.loadAssignments();
         exams       = fileManager.loadExams();
         grades      = fileManager.loadGrades();
-        // userGrades는 생성자에서 별도 로드
         
         System.out.println("🔄 모든 데이터 로드 완료");
     }
@@ -98,6 +173,9 @@ public class DatabaseManager {
         subjects.add(subject);
         fileManager.saveSubjects(subjects);
         System.out.println("➕ 과목 추가: " + subject.getName());
+        
+        // 리스너들에게 알림
+        notifySubjectChanged("ADD", subject.getId());
     }
     
     public boolean updateSubject(Subject updatedSubject) {
@@ -106,6 +184,9 @@ public class DatabaseManager {
                 subjects.set(i, updatedSubject);
                 fileManager.saveSubjects(subjects);
                 System.out.println("✏️ 과목 수정: " + updatedSubject.getName());
+                
+                // 리스너들에게 알림
+                notifySubjectChanged("UPDATE", updatedSubject.getId());
                 return true;
             }
         }
@@ -125,6 +206,9 @@ public class DatabaseManager {
             saveAllData();
             System.out.println("🗑️ 과목 삭제 완료 (관련 데이터 포함): " + 
                              (subjectToDelete.isPresent() ? subjectToDelete.get().getName() : "ID " + id));
+            
+            // 리스너들에게 알림
+            notifySubjectChanged("DELETE", id);
         }
         return removed;
     }
@@ -164,6 +248,9 @@ public class DatabaseManager {
         assignments.add(assignment);
         fileManager.saveAssignments(assignments);
         System.out.println("➕ 과제 추가: " + assignment.getTitle());
+        
+        // 리스너들에게 알림
+        notifyAssignmentChanged("ADD", assignment.getId());
     }
     
     public boolean updateAssignment(Assignment updatedAssignment) {
@@ -172,6 +259,9 @@ public class DatabaseManager {
                 assignments.set(i, updatedAssignment);
                 fileManager.saveAssignments(assignments);
                 System.out.println("✏️ 과제 수정: " + updatedAssignment.getTitle());
+                
+                // 리스너들에게 알림
+                notifyAssignmentChanged("UPDATE", updatedAssignment.getId());
                 return true;
             }
         }
@@ -186,6 +276,9 @@ public class DatabaseManager {
             fileManager.saveAssignments(assignments);
             System.out.println("🗑️ 과제 삭제: " + 
                              (assignmentToDelete.isPresent() ? assignmentToDelete.get().getTitle() : "ID " + id));
+            
+            // 리스너들에게 알림
+            notifyAssignmentChanged("DELETE", id);
         }
         return removed;
     }
@@ -225,6 +318,9 @@ public class DatabaseManager {
         exams.add(exam);
         fileManager.saveExams(exams);
         System.out.println("➕ 시험 추가: " + exam.getTitle());
+        
+        // 리스너들에게 알림
+        notifyExamChanged("ADD", exam.getId());
     }
     
     public boolean updateExam(Exam updatedExam) {
@@ -233,6 +329,9 @@ public class DatabaseManager {
                 exams.set(i, updatedExam);
                 fileManager.saveExams(exams);
                 System.out.println("✏️ 시험 수정: " + updatedExam.getTitle());
+                
+                // 리스너들에게 알림
+                notifyExamChanged("UPDATE", updatedExam.getId());
                 return true;
             }
         }
@@ -247,6 +346,9 @@ public class DatabaseManager {
             fileManager.saveExams(exams);
             System.out.println("🗑️ 시험 삭제: " + 
                              (examToDelete.isPresent() ? examToDelete.get().getTitle() : "ID " + id));
+            
+            // 리스너들에게 알림
+            notifyExamChanged("DELETE", id);
         }
         return removed;
     }
@@ -286,6 +388,9 @@ public class DatabaseManager {
         grades.add(grade);
         fileManager.saveGrades(grades);
         System.out.println("➕ 성적 추가: " + grade.getLetterGrade());
+        
+        // 리스너들에게 알림
+        notifyGradeChanged("ADD", grade.getId());
     }
 
     public boolean updateGrade(GradeRecord updatedGrade) {
@@ -294,6 +399,9 @@ public class DatabaseManager {
                 grades.set(i, updatedGrade);
                 fileManager.saveGrades(grades);
                 System.out.println("✏️ 성적 수정: " + updatedGrade.getLetterGrade());
+                
+                // 리스너들에게 알림
+                notifyGradeChanged("UPDATE", updatedGrade.getId());
                 return true;
             }
         }
@@ -305,6 +413,9 @@ public class DatabaseManager {
         if (removed) {
             fileManager.saveGrades(grades);
             System.out.println("🗑️ 성적 삭제: ID " + id);
+            
+            // 리스너들에게 알림
+            notifyGradeChanged("DELETE", id);
         }
         return removed;
     }
@@ -361,13 +472,15 @@ public class DatabaseManager {
             "과목: %d개\n" +
             "과제: %d개 (급한 과제: %d개)\n" +
             "시험: %d개 (임박한 시험: %d개)\n" +
-            "성적: %d개",
+            "성적: %d개\n" +
+            "등록된 리스너: %d개",
             subjects.size(),
             assignments.size(),
             getUrgentAssignments().size(),
             exams.size(),
             getImminentExams().size(),
-            grades.size()
+            grades.size(),
+            listeners.size()
         );
     }
 
@@ -387,12 +500,21 @@ public class DatabaseManager {
         exams.clear();
         grades.clear();
         saveAllData();
+        
+        // 모든 리스너에게 삭제 알림 (ID -1은 전체 삭제를 의미)
+        notifySubjectChanged("CLEAR", -1);
+        
         System.out.println("🧹 모든 데이터 초기화 완료");
     }
 
     /** 데이터 다시 로드 */
     public void reloadData() {
         loadAllData();
+        userGrades = fileManager.loadUserGrades();
+        
+        // 모든 리스너에게 새로고침 알림
+        notifySubjectChanged("RELOAD", -1);
+        
         System.out.println("🔄 데이터 다시 로드 완료");
     }
 }

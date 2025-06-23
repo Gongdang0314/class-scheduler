@@ -1,4 +1,3 @@
-// src/main/java/common/database/FileManager.java
 package common.database;
 
 import java.io.BufferedReader;
@@ -50,15 +49,24 @@ public class FileManager {
 
     public List<Subject> loadSubjects() {
         List<Subject> subjects = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new FileReader(DATA_DIR + "subjects.txt"))) {
+        File file = new File(DATA_DIR + "subjects.txt");
+        if (!file.exists()) {
+            System.out.println("📄 과목 파일이 없음 - 빈 리스트 반환");
+            return subjects;
+        }
+        
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                Subject subject = stringToSubject(line);
-                if (subject != null) subjects.add(subject);
+                line = line.trim();
+                if (!line.isEmpty()) {
+                    Subject subject = stringToSubject(line);
+                    if (subject != null) subjects.add(subject);
+                }
             }
             System.out.println("📂 과목 데이터 로드 완료: " + subjects.size() + "개");
         } catch (IOException e) {
-            System.out.println("📄 과목 파일이 없음 - 빈 리스트 반환");
+            System.err.println("❌ 과목 로드 실패: " + e.getMessage());
         }
         return subjects;
     }
@@ -77,7 +85,7 @@ public class FileManager {
 
     private Subject stringToSubject(String line) {
         try {
-            String[] parts = line.split("\\|");
+            String[] parts = line.split("\\|", -1); // -1을 사용하여 빈 문자열도 포함
             if (parts.length >= 9) {
                 Subject subject = new Subject();
                 subject.setId(Integer.parseInt(parts[0]));
@@ -92,7 +100,7 @@ public class FileManager {
                 return subject;
             }
         } catch (Exception e) {
-            System.err.println("⚠️ 과목 데이터 파싱 오류: " + line);
+            System.err.println("⚠️ 과목 데이터 파싱 오류: " + line + " - " + e.getMessage());
         }
         return null;
     }
@@ -111,15 +119,24 @@ public class FileManager {
 
     public List<Assignment> loadAssignments() {
         List<Assignment> assignments = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new FileReader(DATA_DIR + "assignments.txt"))) {
+        File file = new File(DATA_DIR + "assignments.txt");
+        if (!file.exists()) {
+            System.out.println("📄 과제 파일이 없음 - 빈 리스트 반환");
+            return assignments;
+        }
+        
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                Assignment asg = stringToAssignment(line);
-                if (asg != null) assignments.add(asg);
+                line = line.trim();
+                if (!line.isEmpty()) {
+                    Assignment asg = stringToAssignment(line);
+                    if (asg != null) assignments.add(asg);
+                }
             }
             System.out.println("📂 과제 데이터 로드 완료: " + assignments.size() + "개");
         } catch (IOException e) {
-            System.out.println("📄 과제 파일이 없음 - 빈 리스트 반환");
+            System.err.println("❌ 과제 로드 실패: " + e.getMessage());
         }
         return assignments;
     }
@@ -136,20 +153,26 @@ public class FileManager {
 
     private Assignment stringToAssignment(String line) {
         try {
-            String[] parts = line.split("\\|");
+            String[] parts = line.split("\\|", -1);
             if (parts.length >= 7) {
                 Assignment asg = new Assignment();
                 asg.setId(Integer.parseInt(parts[0]));
                 asg.setSubjectId(Integer.parseInt(parts[1]));
                 asg.setTitle(emptyToNull(parts[2]));
                 asg.setDescription(emptyToNull(parts[3]));
-                if (!parts[4].isEmpty()) asg.setDueDate(LocalDate.parse(parts[4]));
+                if (!parts[4].isEmpty()) {
+                    try {
+                        asg.setDueDate(LocalDate.parse(parts[4]));
+                    } catch (Exception e) {
+                        System.err.println("⚠️ 날짜 파싱 오류: " + parts[4]);
+                    }
+                }
                 asg.setStatus(emptyToNull(parts[5]));
                 asg.setPriority(emptyToNull(parts[6]));
                 return asg;
             }
         } catch (Exception e) {
-            System.err.println("⚠️ 과제 데이터 파싱 오류: " + line);
+            System.err.println("⚠️ 과제 데이터 파싱 오류: " + line + " - " + e.getMessage());
         }
         return null;
     }
@@ -168,15 +191,24 @@ public class FileManager {
 
     public List<Exam> loadExams() {
         List<Exam> exams = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new FileReader(DATA_DIR + "exams.txt"))) {
+        File file = new File(DATA_DIR + "exams.txt");
+        if (!file.exists()) {
+            System.out.println("📄 시험 파일이 없음 - 빈 리스트 반환");
+            return exams;
+        }
+        
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                Exam ex = stringToExam(line);
-                if (ex != null) exams.add(ex);
+                line = line.trim();
+                if (!line.isEmpty()) {
+                    Exam ex = stringToExam(line);
+                    if (ex != null) exams.add(ex);
+                }
             }
             System.out.println("📂 시험 데이터 로드 완료: " + exams.size() + "개");
         } catch (IOException e) {
-            System.out.println("📄 시험 파일이 없음 - 빈 리스트 반환");
+            System.err.println("❌ 시험 로드 실패: " + e.getMessage());
         }
         return exams;
     }
@@ -193,20 +225,26 @@ public class FileManager {
 
     private Exam stringToExam(String line) {
         try {
-            String[] parts = line.split("\\|");
+            String[] parts = line.split("\\|", -1);
             if (parts.length >= 7) {
                 Exam ex = new Exam();
                 ex.setId(Integer.parseInt(parts[0]));
                 ex.setSubjectId(Integer.parseInt(parts[1]));
                 ex.setTitle(emptyToNull(parts[2]));
                 ex.setType(emptyToNull(parts[3]));
-                if (!parts[4].isEmpty()) ex.setExamDateTime(LocalDateTime.parse(parts[4]));
+                if (!parts[4].isEmpty()) {
+                    try {
+                        ex.setExamDateTime(LocalDateTime.parse(parts[4]));
+                    } catch (Exception e) {
+                        System.err.println("⚠️ 날짜시간 파싱 오류: " + parts[4]);
+                    }
+                }
                 ex.setLocation(emptyToNull(parts[5]));
                 ex.setDescription(emptyToNull(parts[6]));
                 return ex;
             }
         } catch (Exception e) {
-            System.err.println("⚠️ 시험 데이터 파싱 오류: " + line);
+            System.err.println("⚠️ 시험 데이터 파싱 오류: " + line + " - " + e.getMessage());
         }
         return null;
     }
@@ -225,15 +263,24 @@ public class FileManager {
 
     public List<GradeRecord> loadGrades() {
         List<GradeRecord> grades = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new FileReader(DATA_DIR + "grades.txt"))) {
+        File file = new File(DATA_DIR + "grades.txt");
+        if (!file.exists()) {
+            System.out.println("📄 성적 파일이 없음 - 빈 리스트 반환");
+            return grades;
+        }
+        
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                GradeRecord gr = stringToGrade(line);
-                if (gr != null) grades.add(gr);
+                line = line.trim();
+                if (!line.isEmpty()) {
+                    GradeRecord gr = stringToGrade(line);
+                    if (gr != null) grades.add(gr);
+                }
             }
             System.out.println("📂 성적 데이터 로드 완료: " + grades.size() + "개");
         } catch (IOException e) {
-            System.out.println("📄 성적 파일이 없음 - 빈 리스트 반환");
+            System.err.println("❌ 성적 로드 실패: " + e.getMessage());
         }
         return grades;
     }
@@ -249,7 +296,7 @@ public class FileManager {
 
     private GradeRecord stringToGrade(String line) {
         try {
-            String[] parts = line.split("\\|");
+            String[] parts = line.split("\\|", -1);
             if (parts.length >= 6) {
                 GradeRecord gr = new GradeRecord();
                 gr.setId(Integer.parseInt(parts[0]));
@@ -261,7 +308,7 @@ public class FileManager {
                 return gr;
             }
         } catch (Exception e) {
-            System.err.println("⚠️ 성적 데이터 파싱 오류: " + line);
+            System.err.println("⚠️ 성적 데이터 파싱 오류: " + line + " - " + e.getMessage());
         }
         return null;
     }
@@ -277,7 +324,7 @@ public class FileManager {
 
     private Grade stringToUserGrade(String line) {
         try {
-            String[] parts = line.split("\\|");
+            String[] parts = line.split("\\|", -1);
             if (parts.length >= 5) {
                 String subj   = parts[0];
                 String let    = parts[1];
@@ -287,7 +334,7 @@ public class FileManager {
                 return new Grade(subj, let, gpa, credit, major);
             }
         } catch (Exception e) {
-            System.err.println("⚠️ 사용자 성적 파싱 오류: " + line);
+            System.err.println("⚠️ 사용자 성적 파싱 오류: " + line + " - " + e.getMessage());
         }
         return null;
     }
@@ -305,15 +352,24 @@ public class FileManager {
 
     public List<Grade> loadUserGrades() {
         List<Grade> grades = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new FileReader(DATA_DIR + "user_grades.txt"))) {
+        File file = new File(DATA_DIR + "user_grades.txt");
+        if (!file.exists()) {
+            System.out.println("📄 사용자 성적 파일이 없음 - 빈 리스트 반환");
+            return grades;
+        }
+        
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                Grade g = stringToUserGrade(line);
-                if (g != null) grades.add(g);
+                line = line.trim();
+                if (!line.isEmpty()) {
+                    Grade g = stringToUserGrade(line);
+                    if (g != null) grades.add(g);
+                }
             }
             System.out.println("📂 사용자 성적 로드 완료: " + grades.size() + "개");
         } catch (IOException e) {
-            System.out.println("📄 사용자 성적 파일이 없음 - 빈 리스트 반환");
+            System.err.println("❌ 사용자 성적 로드 실패: " + e.getMessage());
         }
         return grades;
     }
@@ -324,7 +380,7 @@ public class FileManager {
     }
 
     private String emptyToNull(String str) {
-        return str.isEmpty() ? null : str;
+        return str == null || str.trim().isEmpty() ? null : str.trim();
     }
 
     public boolean fileExists(String fileName) {
