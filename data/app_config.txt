@@ -1,0 +1,4 @@
+# UniScheduler 설정 파일
+created=2025-06-23T16:06:16.457311100
+version=1.0
+first_run=false
