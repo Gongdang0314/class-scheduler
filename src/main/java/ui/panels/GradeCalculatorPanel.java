@@ -41,7 +41,6 @@ public class GradeCalculatorPanel extends VBox implements DataChangeListener {
 
     private Button addCreditButton;
     private Button deleteCreditButton;
-    private Button calculateButton;
     private Button clearAllButton;
 
     // --- 통계 표시
@@ -98,7 +97,6 @@ public class GradeCalculatorPanel extends VBox implements DataChangeListener {
     private void initButtons() {
         addCreditButton    = UIStyleManager.createPrimaryButton("성적 추가");
         deleteCreditButton = UIStyleManager.createSecondaryButton("성적 삭제");
-        calculateButton    = UIStyleManager.createPrimaryButton("GPA 계산");
         clearAllButton     = UIStyleManager.createSecondaryButton("전체 초기화");
     }
     
@@ -180,9 +178,9 @@ public class GradeCalculatorPanel extends VBox implements DataChangeListener {
         inputGrid.add(new Label("분류:"),      2, 1);
         inputGrid.add(categoryComboBox,       3, 1);
 
-        // 버튼 영역
+        // 버튼 영역 (GPA 계산 버튼 제거됨)
         HBox buttonBox = new HBox(10);
-        buttonBox.getChildren().addAll(addCreditButton, deleteCreditButton, calculateButton, clearAllButton);
+        buttonBox.getChildren().addAll(addCreditButton, deleteCreditButton, clearAllButton);
 
         formContainer.getChildren().addAll(formTitle, inputGrid, buttonBox);
 
@@ -265,7 +263,7 @@ public class GradeCalculatorPanel extends VBox implements DataChangeListener {
             
             gradeTable.refresh();
             updateChart();
-            calculateStatistics();
+            calculateStatistics(); // 자동으로 GPA 계산
             clearForm();
             showAlert("성공", updated ? "성적이 수정되었습니다!" : "성적이 추가되었습니다!");
         });
@@ -281,25 +279,26 @@ public class GradeCalculatorPanel extends VBox implements DataChangeListener {
             gradeTable.getItems().remove(selected);
             gradeTable.refresh();
             updateChart();
-            calculateStatistics();
+            calculateStatistics(); // 자동으로 GPA 계산
             clearForm();
             showAlert("성공", "성적이 삭제되었습니다!");
         });
         
-        // GPA 계산
-        calculateButton.setOnAction(e -> {
-            calculateStatistics();
-            updateChart();
-            showAlert("계산 완료", "GPA 계산이 완료되었습니다!");
-        });
-        
         // 전체 초기화
         clearAllButton.setOnAction(e -> {
-            gradeTable.getItems().clear();
-            updateChart();
-            calculateStatistics();
-            clearForm();
-            showAlert("초기화", "모든 성적이 삭제되었습니다!");
+            Alert confirmation = new Alert(Alert.AlertType.CONFIRMATION);
+            confirmation.setTitle("전체 초기화");
+            confirmation.setHeaderText("모든 성적 삭제");
+            confirmation.setContentText("정말로 모든 성적을 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다!");
+            
+            java.util.Optional<javafx.scene.control.ButtonType> result = confirmation.showAndWait();
+            if (result.isPresent() && result.get() == javafx.scene.control.ButtonType.OK) {
+                gradeTable.getItems().clear();
+                updateChart();
+                calculateStatistics(); // 자동으로 GPA 계산
+                clearForm();
+                showAlert("초기화", "모든 성적이 삭제되었습니다!");
+            }
         });
     }
     
